@@ -11,6 +11,7 @@ async function bootstrap() {
 
   app.use(express.json());
   app.use(cors());
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -22,10 +23,13 @@ async function bootstrap() {
     .setDescription('API Documentation for Projectify Microservice')
     .setVersion('1.0')
     .addTag('projectify')
+    .addBearerAuth()
     .build();
+
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
-  await app.listen(process.env.PORT ?? 4000);
+  await app.listen(process.env.PORT);
 }
+
 bootstrap();
