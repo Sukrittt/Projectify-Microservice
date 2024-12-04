@@ -12,3 +12,46 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id              String  @id @default(cuid())
+  firstName       String
+  lastName        String
+  username        String?
+  gender          String?
+  clerkId         String  @unique // unique identifier for the user in Clerk
+  profileImageUrl String?
+
+  birthday              String?
+  primaryEmailAddressId String?
+  primaryPhoneNumberId  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  emailAddresses EmailAddress[]
+  phoneNumbers   PhoneNumber[]
+}
+
+model EmailAddress {
+  id        String @id @default(cuid())
+  addressId String @unique
+  email     String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PhoneNumber {
+  id     String @id @default(cuid())
+  number String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
