@@ -28,6 +28,14 @@ class ClerkUserDto {
   @IsString()
   @IsOptional()
   @ApiProperty({
+    description: 'Username of the user.',
+    example: 'example',
+  })
+  username?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
     description: 'Last name of the user.',
     example: 'Example',
   })

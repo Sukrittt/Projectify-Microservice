@@ -19,7 +19,6 @@ export class UserController {
     description: 'User data needs to be passed.',
   })
   createUser(@Body() createUserDto: CreateUserDto) {
-    console.log('webhook successfully triggered');
     return this.userService.createUser(createUserDto);
   }
 }
