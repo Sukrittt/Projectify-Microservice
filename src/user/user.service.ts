@@ -1,7 +1,11 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 
-import { CreateUserDto } from './dto/create-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { ApiResponse } from 'src/types/interfaces/api-response';
 
 @Injectable()
@@ -41,8 +45,37 @@ export class UserService {
       };
     } catch (error) {
       throw new InternalServerErrorException({
-        message: 'Failed to create user',
-        error: error.message,
+        message: error.message,
+        error: 'Failed to create user',
+      });
+    }
+  }
+
+  async getOnboardingStatus(userId: string): Promise<ApiResponse> {
+    try {
+      const existingUser = await this.prisma.user.findFirst({
+        where: {
+          clerkId: userId,
+        },
+        select: { avatarImageUrl: true },
+      });
+
+      if (!existingUser) {
+        throw new NotFoundException({
+          message: "We couldn't find your account.",
+        });
+      }
+
+      return {
+        message: 'Onboarding status fetched successfully',
+        data: {
+          onboarded: !!existingUser.avatarImageUrl,
+        },
+      };
+    } catch (error) {
+      throw new InternalServerErrorException({
+        message: error.message,
+        error: 'Failed to fetch onboarding status.',
       });
     }
   }
