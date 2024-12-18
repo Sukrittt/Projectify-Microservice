@@ -7,6 +7,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { ApiResponse } from 'src/types/interfaces/api-response';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -51,13 +52,49 @@ export class UserService {
     }
   }
 
-  async getOnboardingStatus(userId: string): Promise<ApiResponse> {
+  async updateUser(
+    clerkId: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<ApiResponse> {
+    try {
+      const { data } = updateUserDto;
+
+      const existingUser = await this.prisma.user.findFirst({
+        where: { clerkId },
+        select: { id: true },
+      });
+
+      if (!existingUser) {
+        throw new NotFoundException({
+          message: "We couldn't find your account.",
+        });
+      }
+
+      await this.prisma.user.update({
+        where: { clerkId },
+        data: {
+          ...data,
+        },
+      });
+
+      return {
+        message: 'User updated successfully',
+      };
+    } catch (error) {
+      throw new InternalServerErrorException({
+        message: error.message,
+        error: 'Failed to create user',
+      });
+    }
+  }
+
+  async getOnboardingStatus(clerkId: string): Promise<ApiResponse> {
     try {
       const existingUser = await this.prisma.user.findFirst({
         where: {
-          clerkId: userId,
+          clerkId,
         },
-        select: { avatarImageUrl: true },
+        select: { avatarConfig: true },
       });
 
       if (!existingUser) {
@@ -69,7 +106,7 @@ export class UserService {
       return {
         message: 'Onboarding status fetched successfully',
         data: {
-          onboarded: !!existingUser.avatarImageUrl,
+          status: !!existingUser.avatarConfig,
         },
       };
     } catch (error) {

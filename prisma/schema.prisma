@@ -21,7 +21,7 @@ model User {
   gender          String?
   clerkId         String  @unique // unique identifier for the user in Clerk
   profileImageUrl String?
-  avatarImageUrl  String?
+  avatarConfig    String?
 
   birthday              String?
   primaryEmailAddressId String?
