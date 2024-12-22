@@ -10,6 +10,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { ApiResponse } from 'src/types/interfaces/api-response';
 import { UpdateClerkUserDto } from './dto/update-clerk-user.dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -94,14 +95,47 @@ export class UserService {
       });
     }
   }
-
-  async getOnboardingStatus(clerkId: string): Promise<ApiResponse> {
+  async getUserInfo(
+    clerkId: string,
+    attributes: string[],
+  ): Promise<ApiResponse> {
     try {
+      const validAttributes: (keyof User)[] = [
+        'id',
+        'firstName',
+        'lastName',
+        'username',
+        'gender',
+        'clerkId',
+        'profileImageUrl',
+        'avatarConfig',
+        'birthday',
+        'primaryEmailAddressId',
+        'createdAt',
+        'updatedAt',
+      ];
+
+      const selectedAttributes = attributes.filter((attr) =>
+        validAttributes.includes(attr as any),
+      );
+
+      if (selectedAttributes.length === 0) {
+        throw new BadRequestException({
+          message: 'No valid attributes specified to fetch.',
+        });
+      }
+
       const existingUser = await this.prisma.user.findFirst({
         where: {
           clerkId,
         },
-        select: { avatarConfig: true },
+        select: selectedAttributes.reduce(
+          (acc, attr) => {
+            acc[attr] = true;
+            return acc;
+          },
+          {} as Record<string, boolean>,
+        ),
       });
 
       if (!existingUser) {
@@ -111,10 +145,8 @@ export class UserService {
       }
 
       return {
-        message: 'Onboarding status fetched successfully',
-        data: {
-          status: !!existingUser.avatarConfig,
-        },
+        message: 'User info fetched successfully',
+        data: existingUser,
       };
     } catch (error) {
       throw new InternalServerErrorException({

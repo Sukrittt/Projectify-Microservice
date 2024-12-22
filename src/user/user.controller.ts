@@ -1,7 +1,15 @@
-import { ApiBody } from '@nestjs/swagger';
+import { ApiBody, ApiQuery } from '@nestjs/swagger';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { ApiParam, ApiTags } from '@nestjs/swagger';
-import { Controller, Post, Body, Get, Param, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Patch,
+  Query,
+} from '@nestjs/common';
 
 import { UserService } from 'src/user/user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -32,14 +40,24 @@ export class UserController {
     return this.userService.updateUser(clerkId, updateUserDto);
   }
 
-  @Get('/:clerkId/getOnboardingStatus')
+  @Get('/:clerkId')
   @ApiParam({
     name: 'clerkId',
     required: true,
     description: 'The clerk id of the user.',
   })
-  getOnboardingStatus(@Param('clerkId') clerkId: string) {
-    return this.userService.getOnboardingStatus(clerkId);
+  @ApiQuery({
+    name: 'attributes',
+    required: false,
+    description: 'Comma-separated list of attributes to fetch.',
+  })
+  getUserInfo(
+    @Param('clerkId') clerkId: string,
+    @Query('attributes') attributes?: string,
+  ) {
+    const attributeList = attributes ? attributes.split(',') : [];
+
+    return this.userService.getUserInfo(clerkId, attributeList);
   }
 }
 
