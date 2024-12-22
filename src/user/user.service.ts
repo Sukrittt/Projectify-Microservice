@@ -9,6 +9,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { ApiResponse } from 'src/types/interfaces/api-response';
+import { UpdateClerkUserDto } from './dto/update-clerk-user.dto';
 
 @Injectable()
 export class UserService {
@@ -53,13 +54,11 @@ export class UserService {
   }
 
   async updateUser(
+    clerkId: string,
     updateUserDto: UpdateUserDto,
-    rawClerkId?: string,
   ): Promise<ApiResponse> {
     try {
       const { data } = updateUserDto;
-
-      const clerkId = rawClerkId ?? data.id;
 
       if (!clerkId) {
         throw new BadRequestException({
@@ -121,6 +120,49 @@ export class UserService {
       throw new InternalServerErrorException({
         message: error.message,
         error: 'Failed to fetch onboarding status.',
+      });
+    }
+  }
+
+  async updateClerkUser(
+    updateClerkUserDto: UpdateClerkUserDto,
+  ): Promise<ApiResponse> {
+    try {
+      const { data } = updateClerkUserDto;
+
+      const clerkId = data.id;
+
+      const existingUser = await this.prisma.user.findFirst({
+        where: {
+          clerkId,
+        },
+        select: { id: true },
+      });
+
+      if (!existingUser) {
+        throw new NotFoundException({
+          message: "We couldn't find your account.",
+        });
+      }
+
+      const user = await this.prisma.user.update({
+        where: { clerkId },
+        data: {
+          firstName: data.first_name,
+          lastName: data.last_name,
+          profileImageUrl: data.profile_image_url,
+          primaryEmailAddressId: data.primary_email_address_id,
+        },
+      });
+
+      return {
+        message: 'User updated successfully',
+        data: user,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException({
+        message: error.message,
+        error: 'Failed to update user through clerk webhook.',
       });
     }
   }

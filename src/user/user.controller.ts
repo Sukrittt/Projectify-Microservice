@@ -6,6 +6,7 @@ import { Controller, Post, Body, Get, Param, Patch } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { UpdateClerkUserDto } from './dto/update-clerk-user.dto';
 
 @ApiTags('User')
 @ApiBearerAuth()
@@ -28,7 +29,7 @@ export class UserController {
     @Param('clerkId') clerkId: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.userService.updateUser(updateUserDto, clerkId);
+    return this.userService.updateUser(clerkId, updateUserDto);
   }
 
   @Get('/:clerkId/getOnboardingStatus')
@@ -60,11 +61,11 @@ export class ClerkController {
 
   @Post('/update')
   @ApiBody({
-    type: UpdateUserDto,
+    type: UpdateClerkUserDto,
     required: true,
     description: 'User data received from clerk webhook.',
   })
-  updateUser(@Body() updateUserDto: UpdateUserDto) {
-    return this.userService.updateUser(updateUserDto);
+  updateUser(@Body() updateUserDto: UpdateClerkUserDto) {
+    return this.userService.updateClerkUser(updateUserDto);
   }
 }
