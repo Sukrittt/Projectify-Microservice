@@ -1,13 +1,14 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 
+import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { ApiResponse } from 'src/types/interfaces/api-response';
-import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -25,7 +26,6 @@ export class UserService {
           birthday: data.birthday,
           gender: data.gender,
           primaryEmailAddressId: data.primary_email_address_id,
-          primaryPhoneNumberId: data.primary_phone_number_id,
           profileImageUrl: data.image_url,
           username: data.username,
         },
@@ -53,11 +53,19 @@ export class UserService {
   }
 
   async updateUser(
-    clerkId: string,
     updateUserDto: UpdateUserDto,
+    rawClerkId?: string,
   ): Promise<ApiResponse> {
     try {
       const { data } = updateUserDto;
+
+      const clerkId = rawClerkId ?? data.id;
+
+      if (!clerkId) {
+        throw new BadRequestException({
+          message: 'Clerk id needs to be passed.',
+        });
+      }
 
       const existingUser = await this.prisma.user.findFirst({
         where: { clerkId },

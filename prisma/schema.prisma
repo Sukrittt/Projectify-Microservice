@@ -25,13 +25,11 @@ model User {
 
   birthday              String?
   primaryEmailAddressId String?
-  primaryPhoneNumberId  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   emailAddresses EmailAddress[]
-  phoneNumbers   PhoneNumber[]
 
   @@unique([id, clerkId])
 }
@@ -40,17 +38,6 @@ model EmailAddress {
   id        String @id @default(cuid())
   addressId String @unique
   email     String
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model PhoneNumber {
-  id     String @id @default(cuid())
-  number String
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

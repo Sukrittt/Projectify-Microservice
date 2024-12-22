@@ -13,16 +13,6 @@ import { CreateUserDto } from 'src/user/dto/create-user.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post('/create')
-  @ApiBody({
-    type: CreateUserDto,
-    required: true,
-    description: 'User data received from clerk webhook.',
-  })
-  createUser(@Body() createUserDto: CreateUserDto) {
-    return this.userService.createUser(createUserDto);
-  }
-
   @Patch('/:clerkId')
   @ApiParam({
     name: 'clerkId',
@@ -38,7 +28,7 @@ export class UserController {
     @Param('clerkId') clerkId: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.userService.updateUser(clerkId, updateUserDto);
+    return this.userService.updateUser(updateUserDto, clerkId);
   }
 
   @Get('/:clerkId/getOnboardingStatus')
@@ -49,5 +39,32 @@ export class UserController {
   })
   getOnboardingStatus(@Param('clerkId') clerkId: string) {
     return this.userService.getOnboardingStatus(clerkId);
+  }
+}
+
+@ApiTags('Clerk')
+@ApiBearerAuth()
+@Controller('clerk/users')
+export class ClerkController {
+  constructor(private readonly userService: UserService) {}
+
+  @Post('/create')
+  @ApiBody({
+    type: CreateUserDto,
+    required: true,
+    description: 'User data received from clerk webhook.',
+  })
+  createUser(@Body() createUserDto: CreateUserDto) {
+    return this.userService.createUser(createUserDto);
+  }
+
+  @Post('/update')
+  @ApiBody({
+    type: UpdateUserDto,
+    required: true,
+    description: 'User data received from clerk webhook.',
+  })
+  updateUser(@Body() updateUserDto: UpdateUserDto) {
+    return this.userService.updateUser(updateUserDto);
   }
 }
