@@ -1,11 +1,15 @@
+import { ConfigModule } from '@nestjs/config';
 import { Module, MiddlewareConsumer } from '@nestjs/common';
 
-import { ConfigModule } from '@nestjs/config';
+import { PrismaModule } from './prisma/prisma.module';
+import { HashMiddleware } from './middleware/hash.middleware';
+
 import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
-import { PrismaModule } from './prisma/prisma.module';
 import { UserController } from './user/user.controller';
-import { HashMiddleware } from './middleware/hash.middleware';
+
+import { RoomModule } from './room/room.module';
+import { RoomController } from './room/room.controller';
 
 @Module({
   imports: [
@@ -15,8 +19,9 @@ import { HashMiddleware } from './middleware/hash.middleware';
     }),
     UserModule,
     PrismaModule,
+    RoomModule,
   ],
-  controllers: [UserController],
+  controllers: [UserController, RoomController],
   providers: [UserService],
 })
 export class AppModule {

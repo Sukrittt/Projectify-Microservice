@@ -4,13 +4,13 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { User } from '@prisma/client';
 
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { ApiResponse } from 'src/types/interfaces/api-response';
 import { UpdateClerkUserDto } from './dto/update-clerk-user.dto';
-import { User } from '@prisma/client';
 
 @Injectable()
 export class UserService {

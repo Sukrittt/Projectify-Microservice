@@ -50,8 +50,17 @@ model EmailAddress {
 model Room {
   id String @id @default(cuid())
 
+  status RoomStatus? @default(WAITING)
+
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
+  matchedAt DateTime?
+  createdAt DateTime  @default(now())
+}
+
+enum RoomStatus {
+  WAITING
+  REVIEWING_OPPONENT
+  MATCHED
 }
