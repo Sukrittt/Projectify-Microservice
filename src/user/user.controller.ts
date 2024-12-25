@@ -12,9 +12,9 @@ import {
 } from '@nestjs/common';
 
 import { UserService } from 'src/user/user.service';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto } from 'src/user/dto/update-user.dto';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
-import { UpdateClerkUserDto } from './dto/update-clerk-user.dto';
+import { UpdateClerkUserDto } from 'src/user/dto/update-clerk-user.dto';
 
 @ApiTags('User')
 @ApiBearerAuth()

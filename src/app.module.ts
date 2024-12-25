@@ -1,15 +1,19 @@
 import { ConfigModule } from '@nestjs/config';
 import { Module, MiddlewareConsumer } from '@nestjs/common';
 
-import { PrismaModule } from './prisma/prisma.module';
-import { HashMiddleware } from './middleware/hash.middleware';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { HashMiddleware } from 'src/middleware/hash.middleware';
 
-import { UserModule } from './user/user.module';
-import { UserService } from './user/user.service';
-import { UserController } from './user/user.controller';
+import { UserModule } from 'src/user/user.module';
 
-import { RoomModule } from './room/room.module';
-import { RoomController } from './room/room.controller';
+import { RoomModule } from 'src/room/room.module';
+import { UserService } from 'src/user/user.service';
+import { RoomService } from 'src/room/room.service';
+import { QueueModule } from 'src/queue/queue.module';
+import { QueueService } from 'src/queue/queue.service';
+import { UserController } from 'src/user/user.controller';
+import { RoomController } from 'src/room/room.controller';
+import { QueueController } from 'src/queue/queue.controller';
 
 @Module({
   imports: [
@@ -20,9 +24,10 @@ import { RoomController } from './room/room.controller';
     UserModule,
     PrismaModule,
     RoomModule,
+    QueueModule,
   ],
-  controllers: [UserController, RoomController],
-  providers: [UserService],
+  controllers: [UserController, RoomController, QueueController],
+  providers: [UserService, RoomService, QueueService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

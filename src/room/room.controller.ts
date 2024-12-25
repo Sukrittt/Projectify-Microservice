@@ -2,8 +2,8 @@ import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
-import { RoomService } from './room.service';
-import { CreateRoomDto } from './dto/create-room.dto';
+import { RoomService } from 'src/room/room.service';
+import { CreateRoomDto } from 'src/room/dto/create-room.dto';
 
 @ApiTags('Room')
 @ApiBearerAuth()

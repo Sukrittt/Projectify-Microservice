@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { User } from '@prisma/client';
 
-import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { UpdateUserDto } from 'src/user/dto/update-user.dto';
 import { ApiResponse } from 'src/types/interfaces/api-response';
-import { UpdateClerkUserDto } from './dto/update-clerk-user.dto';
+import { UpdateClerkUserDto } from 'src/user/dto/update-clerk-user.dto';
 
 @Injectable()
 export class UserService {

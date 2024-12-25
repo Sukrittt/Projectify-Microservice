@@ -25,14 +25,20 @@ export class RoomService {
         });
       }
 
+      // Delete all the waiting rooms of the user.
+      await this.prisma.room.deleteMany({
+        where: {
+          userId: existingUser.id,
+          status: 'WAITING',
+        },
+      });
+
       const room = await this.prisma.room.create({
         data: {
           userId: existingUser.id,
         },
         select: { id: true },
       });
-
-      // Trigger a task here which will delete the room after 5 mins.
 
       return {
         message: 'Room created successfully',
