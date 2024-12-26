@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { IsString } from 'class-validator';
 
-export class CreateRoomDto {
+export class JoinRoomDto {
   @IsString()
   @ApiProperty({
     description: 'The clerk id of the user.',

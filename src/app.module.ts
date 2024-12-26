@@ -6,28 +6,15 @@ import { HashMiddleware } from 'src/middleware/hash.middleware';
 
 import { UserModule } from 'src/user/user.module';
 
+import { AppService } from './app.service';
+import { AppController } from './app.controller';
+
 import { RoomModule } from 'src/room/room.module';
-import { UserService } from 'src/user/user.service';
-import { RoomService } from 'src/room/room.service';
-import { QueueModule } from 'src/queue/queue.module';
-import { QueueService } from 'src/queue/queue.service';
-import { UserController } from 'src/user/user.controller';
-import { RoomController } from 'src/room/room.controller';
-import { QueueController } from 'src/queue/queue.controller';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
-    UserModule,
-    PrismaModule,
-    RoomModule,
-    QueueModule,
-  ],
-  controllers: [UserController, RoomController, QueueController],
-  providers: [UserService, RoomService, QueueService],
+  imports: [ConfigModule.forRoot(), UserModule, PrismaModule, RoomModule],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

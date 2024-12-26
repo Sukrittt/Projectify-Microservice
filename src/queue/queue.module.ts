@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { QueueService } from 'src/queue/queue.service';
 import { QueueConsumer } from 'src/queue/queue-consumer';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
   imports: [
@@ -14,12 +14,16 @@ import { QueueConsumer } from 'src/queue/queue-consumer';
           host: configService.getOrThrow('REDIS_HOST_ADDRESS'),
           port: configService.getOrThrow('REDIS_PORT'),
           password: configService.getOrThrow('REDIS_PASSWORD'),
+          // password: 'blahhhh',
         },
       }),
       inject: [ConfigService],
     }),
+    BullModule.registerQueue({
+      name: 'matchmaking',
+    }),
   ],
-  providers: [QueueService, QueueConsumer],
-  exports: [BullModule, QueueConsumer],
+  providers: [QueueConsumer, PrismaService],
+  exports: [BullModule],
 })
 export class QueueModule {}

@@ -1,12 +1,12 @@
-import Bull, { Queue } from 'bull';
-import { Injectable } from '@nestjs/common';
+import * as Bull from 'bull';
 import { ConfigService } from '@nestjs/config';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
 import { ApiResponse } from 'src/types/interfaces/api-response';
 
 @Injectable()
 export class QueueService {
-  private queues: Map<string, Queue> = new Map();
+  private queues: Map<string, Bull.Queue> = new Map();
 
   constructor(private configService: ConfigService) {}
 
@@ -25,6 +25,7 @@ export class QueueService {
     };
 
     const queue = new Bull(queueName, { redis: redisConfig });
+
     this.queues.set(queueName, queue);
 
     return {
@@ -36,7 +37,47 @@ export class QueueService {
   getAllQueues(): ApiResponse {
     return {
       message: 'Sucessfully fetched all queues',
-      data: Array.from(this.queues.values()),
+      data: {
+        count: this.queues.size,
+        queueNames: Array.from(this.queues.keys()),
+        queues: Array.from(this.queues.values()),
+      },
+    };
+  }
+
+  async removeUserFromQueue(
+    userId: string,
+    queueName: string,
+  ): Promise<ApiResponse> {
+    try {
+      const queue = await this.getOrCreateQueue(queueName);
+
+      const jobs = await queue.data.getJobs([
+        'waiting',
+        'active',
+        'delayed',
+        'paused',
+      ]);
+
+      for (const job of jobs) {
+        if (job.data.userId === userId) {
+          await job.remove();
+
+          console.log(`User ${userId} removed from the queue.`);
+          return {
+            message: `User ${userId} removed from the queue.`,
+          };
+        }
+      }
+    } catch (error) {
+      throw new InternalServerErrorException({
+        message: error.message,
+        error: 'Failed to create user',
+      });
+    }
+
+    return {
+      message: 'User removed from all queues successfully',
     };
   }
 

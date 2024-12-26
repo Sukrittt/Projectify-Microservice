@@ -1,9 +1,9 @@
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { Body, Controller, Post } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
 
 import { RoomService } from 'src/room/room.service';
-import { CreateRoomDto } from 'src/room/dto/create-room.dto';
+import { JoinRoomDto } from 'src/room/dto/join-room.dto';
 
 @ApiTags('Room')
 @ApiBearerAuth()
@@ -11,13 +11,13 @@ import { CreateRoomDto } from 'src/room/dto/create-room.dto';
 export class RoomController {
   constructor(private readonly roomService: RoomService) {}
 
-  @Post('/create')
+  @Post('/join')
   @ApiBody({
-    type: CreateRoomDto,
+    type: JoinRoomDto,
     required: true,
-    description: 'User data to be updated.',
+    description: 'User to be added to a room.',
   })
-  updateUser(@Body() createRoomDto: CreateRoomDto) {
-    return this.roomService.createRoom(createRoomDto);
+  updateUser(@Body() joinRoomDto: JoinRoomDto) {
+    return this.roomService.joinRoom(joinRoomDto);
   }
 }
