@@ -2,8 +2,7 @@ import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
-// import { QueueService } from 'src/queue/queue.service';
-import { QUEUE_NAME } from 'src/constants';
+import { DEFAULT_QUEUE } from 'src/constants';
 import { JoinRoomDto } from 'src/room/dto/join-room.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ApiResponse } from 'src/types/interfaces/api-response';
@@ -12,8 +11,7 @@ import { ApiResponse } from 'src/types/interfaces/api-response';
 export class RoomService {
   constructor(
     private prisma: PrismaService,
-    // private queueService: QueueService,
-    @InjectQueue(QUEUE_NAME) private readonly generateQueue: Queue,
+    @InjectQueue(DEFAULT_QUEUE) private readonly queue: Queue,
   ) {}
 
   async joinRoom(joinRoomDto: JoinRoomDto): Promise<ApiResponse> {
@@ -33,64 +31,46 @@ export class RoomService {
         });
       }
 
-      // const { data: queue } =
-      //   await this.queueService.getOrCreateQueue('matchmaking-queue');
+      // Delete all the waiting rooms of the user.
+      await this.prisma.room.deleteMany({
+        where: {
+          userId: existingUser.id,
+          status: 'WAITING',
+        },
+      });
 
-      const promises: any = [
-        // Delete all the waiting rooms of the user.
-        this.prisma.room.deleteMany({
+      const promises = [
+        this.prisma.room.create({
+          data: {
+            userId: existingUser.id,
+          },
+          select: { id: true },
+        }),
+        this.prisma.additionalUserInfo.findFirst({
           where: {
             userId: existingUser.id,
-            status: 'WAITING',
+          },
+          include: {
+            user: true,
           },
         }),
       ];
 
-      // if (queue) {
-      //   promises.push(
-      //     // TODO: Manage dynamic queues.
-      //     this.queueService.removeUserFromQueue(
-      //       existingUser.id,
-      //       'matchmaking-queue',
-      //     ),
-      //   );
-      // }
+      const [room, additionalUserInfo] = await Promise.all(promises);
 
-      await Promise.all(promises);
+      await this.queue.clean(0, 'completed');
 
-      const room = await this.prisma.room.create({
-        data: {
-          userId: existingUser.id,
+      const currentTime = Date.now();
+
+      await this.queue.removeJobs(existingUser.id);
+
+      this.queue.add(
+        {
+          roomId: room.id,
+          userData: additionalUserInfo,
+          timestamp: currentTime,
         },
-        select: { id: true },
-      });
-
-      // const { data: queue } =
-      //   await this.queueService.getOrCreateQueue('matchmaking-queue');
-
-      // queue.add({ userId: existingUser.id, roomId: room.id });
-      // this.generateQueue.add({
-      //   userId: existingUser.id,
-      //   roomId: room.id,
-      // });
-
-      console.log('room', room);
-
-      this.generateQueue.add({
-        messages: [
-          {
-            value: JSON.stringify({
-              grantId: '123',
-              nylasAccountId: '123',
-              type: 'onboard',
-            }),
-          },
-        ],
-      });
-
-      console.log(
-        'this.generateQueue.client.status',
-        this.generateQueue.client.status,
+        { jobId: existingUser.id, removeOnComplete: true }, // identify every job as a user
       );
 
       return {

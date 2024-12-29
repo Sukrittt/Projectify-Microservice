@@ -1,1 +1,3 @@
-export const QUEUE_NAME = 'matchmaking';
+export const DEFAULT_QUEUE = 'global-room';
+
+// add more queues here

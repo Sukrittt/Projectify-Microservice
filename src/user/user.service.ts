@@ -34,13 +34,22 @@ export class UserService {
         select: { id: true },
       });
 
-      await this.prisma.emailAddress.createMany({
-        data: data.email_addresses.map((address) => ({
-          email: address.email_address,
-          addressId: address.id,
-          userId: user.id,
-        })),
-      });
+      const promises = [
+        this.prisma.emailAddress.createMany({
+          data: data.email_addresses.map((address) => ({
+            email: address.email_address,
+            addressId: address.id,
+            userId: user.id,
+          })),
+        }),
+        this.prisma.additionalUserInfo.create({
+          data: {
+            userId: user.id,
+          },
+        }),
+      ];
+
+      await Promise.all(promises);
 
       return {
         message: 'User created successfully',
