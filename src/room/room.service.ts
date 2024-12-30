@@ -27,7 +27,7 @@ export class RoomService {
           userId: existingUser.id,
           status: 'WAITING',
         },
-        select: { id: true },
+        select: { id: true, createdAt: true },
       });
 
       if (!existingRoom) {
