@@ -169,6 +169,8 @@ export class QueueConsumer {
     // In this case no opponent found and 5 minutes have passed
     Logger.log('No opponent found');
 
+    await this.prisma.room.delete({ where: { id: currentUser.roomId } });
+
     // TODO: notify user that no opponent found
   }
   async removeJob(jobId: string) {

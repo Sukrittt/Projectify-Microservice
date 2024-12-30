@@ -104,46 +104,21 @@ export class UserService {
       });
     }
   }
-  async getUserInfo(
+  async getUserInfo<T extends keyof User>(
     clerkId: string,
-    attributes: string[],
-  ): Promise<ApiResponse> {
+    attributes: T[],
+  ): Promise<ApiResponse<Pick<User, T>>> {
     try {
-      const validAttributes: (keyof User)[] = [
-        'id',
-        'firstName',
-        'lastName',
-        'username',
-        'gender',
-        'clerkId',
-        'profileImageUrl',
-        'avatarConfig',
-        'birthday',
-        'primaryEmailAddressId',
-        'createdAt',
-        'updatedAt',
-      ];
-
-      const selectedAttributes = attributes.filter((attr) =>
-        validAttributes.includes(attr as any),
-      );
-
-      if (selectedAttributes.length === 0) {
-        throw new BadRequestException({
-          message: 'No valid attributes specified to fetch.',
-        });
-      }
-
       const existingUser = await this.prisma.user.findFirst({
         where: {
           clerkId,
         },
-        select: selectedAttributes.reduce(
+        select: attributes.reduce(
           (acc, attr) => {
             acc[attr] = true;
             return acc;
           },
-          {} as Record<string, boolean>,
+          {} as Record<T, true>,
         ),
       });
 
@@ -155,12 +130,12 @@ export class UserService {
 
       return {
         message: 'User info fetched successfully',
-        data: existingUser,
+        data: existingUser as unknown as Pick<User, T>,
       };
     } catch (error) {
       throw new InternalServerErrorException({
         message: error.message,
-        error: 'Failed to fetch onboarding status.',
+        error: 'Failed to fetch user info.',
       });
     }
   }

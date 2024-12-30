@@ -1,6 +1,3 @@
-import { ApiBody, ApiQuery } from '@nestjs/swagger';
-import { ApiBearerAuth } from '@nestjs/swagger';
-import { ApiParam, ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -9,7 +6,11 @@ import {
   Param,
   Patch,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
+import { User } from '@prisma/client';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBody, ApiQuery, ApiParam, ApiTags } from '@nestjs/swagger';
 
 import { UserService } from 'src/user/user.service';
 import { UpdateUserDto } from 'src/user/dto/update-user.dto';
@@ -55,7 +56,32 @@ export class UserController {
     @Param('clerkId') clerkId: string,
     @Query('attributes') attributes?: string,
   ) {
-    const attributeList = attributes ? attributes.split(',') : [];
+    const validAttributes: (keyof User)[] = [
+      'id',
+      'firstName',
+      'lastName',
+      'username',
+      'gender',
+      'clerkId',
+      'profileImageUrl',
+      'avatarConfig',
+      'birthday',
+      'primaryEmailAddressId',
+      'createdAt',
+      'updatedAt',
+    ];
+
+    const attributeList = attributes
+      ? attributes
+          .split(',')
+          .filter((attr): attr is keyof User =>
+            validAttributes.includes(attr as keyof User),
+          )
+      : [];
+
+    if (attributes && attributeList.length === 0) {
+      throw new BadRequestException('No valid attributes specified.');
+    }
 
     return this.userService.getUserInfo(clerkId, attributeList);
   }

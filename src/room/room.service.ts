@@ -3,6 +3,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
 import { DEFAULT_QUEUE } from 'src/constants';
+import { UserService } from 'src/user/user.service';
 import { JoinRoomDto } from 'src/room/dto/join-room.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ApiResponse } from 'src/types/interfaces/api-response';
@@ -11,25 +12,111 @@ import { ApiResponse } from 'src/types/interfaces/api-response';
 export class RoomService {
   constructor(
     private prisma: PrismaService,
+    private user: UserService,
     @InjectQueue(DEFAULT_QUEUE) private readonly queue: Queue,
   ) {}
+
+  async getRoom(clerkId: string): Promise<ApiResponse> {
+    try {
+      const { data: existingUser } = await this.user.getUserInfo(clerkId, [
+        'id',
+      ]);
+
+      const existingRoom = await this.prisma.room.findFirst({
+        where: {
+          userId: existingUser.id,
+          status: 'WAITING',
+        },
+        select: { id: true },
+      });
+
+      if (!existingRoom) {
+        throw new InternalServerErrorException({
+          message: "We couldn't find this room.",
+        });
+      }
+
+      return {
+        message: 'Successfully fetched room.',
+        data: existingRoom,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException({
+        message: error.message,
+        error: 'Failed to fetch room.',
+      });
+    }
+  }
+
+  async getEstimatedQueueTime(clerkId: string): Promise<ApiResponse> {
+    try {
+      const { data: existingUser } = await this.user.getUserInfo(clerkId, [
+        'id',
+      ]);
+
+      const userAddInfo = await this.prisma.additionalUserInfo.findFirst({
+        where: {
+          userId: existingUser.id,
+        },
+        select: {
+          tierId: true,
+        },
+      });
+
+      const rooms = await this.prisma.room.findMany({
+        where: {
+          status: 'MATCHED',
+          matchedAt: {
+            not: null,
+          },
+          user: {
+            additionalInfo: {
+              tierId: userAddInfo?.tierId,
+            },
+          },
+        },
+        select: {
+          createdAt: true,
+          matchedAt: true,
+        },
+      });
+
+      if (rooms.length === 0) {
+        console.log('No matched records found.');
+        return;
+      }
+
+      const totalMatchTime = rooms.reduce((total, room) => {
+        const createdAt = new Date(room.createdAt);
+        const matchedAt = new Date(room.matchedAt!);
+
+        const timeDifference = matchedAt.getTime() - createdAt.getTime();
+        return total + timeDifference;
+      }, 0);
+
+      const averageMatchTimeMs = totalMatchTime / rooms.length;
+
+      const averageMatchTimeSeconds = averageMatchTimeMs / 1000;
+
+      return {
+        data: averageMatchTimeSeconds,
+        message: 'Successfully fetched estimated queue time.',
+      };
+    } catch (error) {
+      throw new InternalServerErrorException({
+        message: error.message,
+        error: 'Failed to fetch estimated queue time.',
+      });
+    }
+  }
 
   async joinRoom(joinRoomDto: JoinRoomDto): Promise<ApiResponse> {
     try {
       const { clerkId } = joinRoomDto;
 
-      const existingUser = await this.prisma.user.findFirst({
-        where: {
-          clerkId,
-        },
-        select: { id: true },
-      });
-
-      if (!existingUser) {
-        throw new InternalServerErrorException({
-          message: "We couldn't find your account.",
-        });
-      }
+      const { data: existingUser } = await this.user.getUserInfo(clerkId, [
+        'id',
+      ]);
 
       // Delete all the waiting rooms of the user.
       await this.prisma.room.deleteMany({
