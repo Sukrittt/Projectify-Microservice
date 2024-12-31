@@ -81,10 +81,7 @@ export class RoomService {
         },
       });
 
-      if (rooms.length === 0) {
-        console.log('No matched records found.');
-        return;
-      }
+      if (rooms.length === 0) return;
 
       const totalMatchTime = rooms.reduce((total, room) => {
         const createdAt = new Date(room.createdAt);
