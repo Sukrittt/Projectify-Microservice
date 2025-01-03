@@ -10,9 +10,16 @@ import { AppService } from './app.service';
 import { AppController } from './app.controller';
 
 import { RoomModule } from 'src/room/room.module';
+import { GenerateModule } from './generate/generate.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), UserModule, PrismaModule, RoomModule],
+  imports: [
+    ConfigModule.forRoot(),
+    UserModule,
+    PrismaModule,
+    RoomModule,
+    GenerateModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
