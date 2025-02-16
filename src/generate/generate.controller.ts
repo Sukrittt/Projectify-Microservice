@@ -11,7 +11,7 @@ import { CodingMinigameDto } from 'src/generate/dto/coding-minigame.dto';
 export class GenerateController {
   constructor(private readonly generateService: GenerateService) {}
 
-  @Post('/coding-minigame')
+  @Post('/waiting-room')
   @ApiBody({
     type: CodingMinigameDto,
     required: true,
