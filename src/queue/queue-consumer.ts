@@ -3,8 +3,10 @@ import { Logger } from '@nestjs/common';
 import type { User, AdditionalUserInfo } from '@prisma/client';
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
 
-import { DEFAULT_QUEUE } from 'src/constants';
+import { DEFAULT_QUEUE, PUSHER_CHANNELS, TIER_LEVELS } from 'src/constants';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { pusher } from 'src/lib/pusher';
+import { RoomEvent } from 'src/types/pusher';
 
 type ExtendedUser = AdditionalUserInfo & { user: User };
 
@@ -97,7 +99,28 @@ export class QueueConsumer {
       await this.queue.removeJobs(job.id as string);
       await this.removeJob(job.id as string);
 
-      // TODO: send notification to both users
+      Logger.log('Sending pusher events to both users');
+
+      console.log('currentUser', job.data.userData);
+      console.log('opponent', opponent.userData);
+
+      const opponentPayload = getRoomPayload(opponent.userData);
+      const currentUserPayload = getRoomPayload(job.data.userData);
+
+      const pusherPromises = [
+        pusher.trigger(
+          `user-${job.data.userData.userId}-room`, // current user
+          PUSHER_CHANNELS.MATCH_MAKING,
+          opponentPayload, // send opponent payload
+        ),
+        pusher.trigger(
+          `user-${opponent.userData.userId}-room`, // opponent
+          PUSHER_CHANNELS.MATCH_MAKING,
+          currentUserPayload, // send current user payload
+        ),
+      ];
+
+      await Promise.all(pusherPromises);
 
       Logger.log('Successfully perfomed action');
     } catch (error) {
@@ -171,7 +194,11 @@ export class QueueConsumer {
 
     // await this.prisma.room.delete({ where: { id: currentUser.roomId } });
 
-    // TODO: notify user that no opponent found
+    await pusher.trigger(
+      `user-${currentUser.userData.userId}-room`, // current user
+      PUSHER_CHANNELS.MATCH_MAKING,
+      { type: 'match-not-found' },
+    );
   }
   async removeJob(jobId: string) {
     const existingJob = await this.queue.getJob(jobId);
@@ -183,4 +210,19 @@ export class QueueConsumer {
     await existingJob.moveToCompleted();
     await existingJob.remove();
   }
+}
+
+function getRoomPayload(userInfo: QueueInput['userData']): RoomEvent {
+  const payload: RoomEvent = {
+    type: 'match-found',
+    user: {
+      name: userInfo.user.firstName + ' ' + userInfo.user.lastName,
+      language: userInfo.preferredLanguage,
+      profileRank: userInfo?.tierProgress ?? 0,
+      tierLevel: TIER_LEVELS[userInfo.tierId],
+      avatar: userInfo.user.avatarConfig,
+    },
+  };
+
+  return payload;
 }

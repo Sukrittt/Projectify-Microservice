@@ -38,7 +38,7 @@ export class RoomService {
 
       return {
         message: 'Successfully fetched room.',
-        data: existingRoom,
+        data: { ...existingRoom, userId: existingUser.id },
       };
     } catch (error) {
       throw new InternalServerErrorException({

@@ -1,6 +1,5 @@
-import { ApiBody, ApiTags } from '@nestjs/swagger';
-import { ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { ApiBody, ApiTags, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 
 import { RoomService } from 'src/room/room.service';
 import { JoinRoomDto } from 'src/room/dto/join-room.dto';
