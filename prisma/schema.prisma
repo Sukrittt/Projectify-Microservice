@@ -30,8 +30,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   emailAddresses EmailAddress[]
-  rooms          Room[]         @relation("UserRooms")
-
+  rooms          Room[]              @relation("UserRooms")
+  participations Participant[]
   additionalInfo AdditionalUserInfo?
 
   @@unique([id, clerkId])
@@ -95,4 +95,29 @@ model Tier {
   updatedAt DateTime @updatedAt
 
   users AdditionalUserInfo[]
+}
+
+model Competition {
+  id String @id @default(cuid())
+
+  question    String
+  endDateTime DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants Participant[] // only 2 allowed.
+}
+
+model Participant {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
