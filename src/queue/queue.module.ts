@@ -3,8 +3,10 @@ import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { DEFAULT_QUEUE } from 'src/constants';
+import { UserService } from 'src/user/user.service';
 import { QueueConsumer } from 'src/queue/queue-consumer';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { GenerateService } from 'src/generate/generate.service';
 
 @Module({
   imports: [
@@ -23,7 +25,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
       name: DEFAULT_QUEUE,
     }),
   ],
-  providers: [QueueConsumer, PrismaService],
+  providers: [QueueConsumer, PrismaService, GenerateService, UserService],
   exports: [BullModule],
 })
 export class QueueModule {}

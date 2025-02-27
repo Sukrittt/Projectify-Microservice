@@ -21,6 +21,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.22.0",
     "@nestjs/bull": "^10.2.3",
     "@nestjs/common": "^11.0.10",
     "@nestjs/config": "^3.3.0",

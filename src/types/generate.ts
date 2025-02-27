@@ -9,3 +9,8 @@ export type CodingMinigamePayload = {
     tierLevel: string;
   };
 };
+
+export type CodingGenerationPayload = {
+  question: string;
+  endDateTime: Date;
+};

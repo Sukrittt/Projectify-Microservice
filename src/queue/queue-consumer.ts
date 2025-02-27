@@ -3,10 +3,14 @@ import { Logger } from '@nestjs/common';
 import type { User, AdditionalUserInfo } from '@prisma/client';
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
 
-import { DEFAULT_QUEUE, PUSHER_CHANNELS, TIER_LEVELS } from 'src/constants';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { pusher } from 'src/lib/pusher';
 import { RoomEvent } from 'src/types/pusher';
+import { personality } from 'src/constants/ai';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { generateContentWithGemini } from 'src/lib/gemini';
+import { CodingGenerationPayload } from 'src/types/generate';
+import { GenerateService } from 'src/generate/generate.service';
+import { DEFAULT_QUEUE, PUSHER_CHANNELS, TIER_LEVELS } from 'src/constants';
 
 type ExtendedUser = AdditionalUserInfo & { user: User };
 
@@ -20,6 +24,7 @@ type QueueInput = {
 export class QueueConsumer {
   constructor(
     private prisma: PrismaService,
+    private generateService: GenerateService,
     @InjectQueue(DEFAULT_QUEUE) private readonly queue: Queue,
   ) {}
 
@@ -104,8 +109,10 @@ export class QueueConsumer {
       console.log('currentUser', job.data.userData);
       console.log('opponent', opponent.userData);
 
-      const opponentPayload = getRoomPayload(opponent.userData);
-      const currentUserPayload = getRoomPayload(job.data.userData);
+      await this.handleCreateCompetition(job.data.userData, opponent.userData);
+
+      const opponentPayload = this.getRoomPayload(opponent.userData);
+      const currentUserPayload = this.getRoomPayload(job.data.userData);
 
       const pusherPromises = [
         pusher.trigger(
@@ -210,19 +217,68 @@ export class QueueConsumer {
     await existingJob.moveToCompleted();
     await existingJob.remove();
   }
-}
 
-function getRoomPayload(userInfo: QueueInput['userData']): RoomEvent {
-  const payload: RoomEvent = {
-    type: 'match-found',
-    user: {
-      name: userInfo.user.firstName + ' ' + userInfo.user.lastName,
-      language: userInfo.preferredLanguage,
-      profileRank: userInfo?.tierProgress ?? 0,
-      tierLevel: TIER_LEVELS[userInfo.tierId],
-      avatar: userInfo.user.avatarConfig,
-    },
-  };
+  async handleCreateCompetition(
+    user: QueueInput['userData'],
+    opponent: QueueInput['userData'],
+  ) {
+    const userGeneratePayload =
+      await this.generateService.generateCodingMinigame({
+        clerkId: user.userId,
+      });
 
-  return payload;
+    const opponentGeneratePayload =
+      await this.generateService.generateCodingMinigame({
+        clerkId: opponent.userId,
+      });
+
+    const genPayload = {
+      tiers: userGeneratePayload['tiers'],
+      userOne: JSON.stringify(userGeneratePayload['user']),
+      userTwo: JSON.stringify(opponentGeneratePayload['user']),
+    };
+
+    const generatedPayload = await generateContentWithGemini(
+      JSON.stringify(genPayload),
+      personality.COMPETITION_QUESTION_GENERATION,
+    );
+
+    const { question, endDateTime } = JSON.parse(
+      generatedPayload,
+    ) as CodingGenerationPayload;
+
+    await this.prisma.competition.create({
+      data: {
+        question,
+        endDateTime,
+        participants: {
+          createMany: {
+            data: [
+              {
+                userId: user.userId,
+              },
+              {
+                userId: opponent.userId,
+              },
+            ],
+          },
+        },
+      },
+    });
+  }
+
+  getRoomPayload(userInfo: QueueInput['userData']): RoomEvent {
+    const payload: RoomEvent = {
+      type: 'match-found',
+      user: {
+        name: userInfo.user.firstName + ' ' + userInfo.user.lastName,
+        language: userInfo.preferredLanguage,
+        profileRank: userInfo?.tierProgress ?? 0,
+        tierLevel: TIER_LEVELS[userInfo.tierId],
+        avatar: userInfo.user.avatarConfig,
+      },
+    };
+
+    return payload;
+  }
 }
