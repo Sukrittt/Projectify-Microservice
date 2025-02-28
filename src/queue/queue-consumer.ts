@@ -109,7 +109,10 @@ export class QueueConsumer {
       console.log('currentUser', job.data.userData);
       console.log('opponent', opponent.userData);
 
-      await this.handleCreateCompetition(job.data.userData, opponent.userData);
+      const competition = await this.handleCreateCompetition(
+        job.data.userData,
+        opponent.userData,
+      );
 
       const opponentPayload = this.getRoomPayload(opponent.userData);
       const currentUserPayload = this.getRoomPayload(job.data.userData);
@@ -118,12 +121,12 @@ export class QueueConsumer {
         pusher.trigger(
           `user-${job.data.userData.userId}-room`, // current user
           PUSHER_CHANNELS.MATCH_MAKING,
-          opponentPayload, // send opponent payload
+          { ...opponentPayload, competitionId: competition.id }, // send opponent payload
         ),
         pusher.trigger(
           `user-${opponent.userData.userId}-room`, // opponent
           PUSHER_CHANNELS.MATCH_MAKING,
-          currentUserPayload, // send current user payload
+          { ...currentUserPayload, competitionId: competition.id }, // send current user payload
         ),
       ];
 
@@ -131,6 +134,7 @@ export class QueueConsumer {
 
       Logger.log('Successfully perfomed action');
     } catch (error) {
+      console.log('Error finding opponents:', error);
       Logger.error('Error finding opponents:', error);
     }
   }
@@ -247,7 +251,9 @@ export class QueueConsumer {
       generatedPayload,
     ) as CodingGenerationPayload;
 
-    await this.prisma.competition.create({
+    console.log('Generated Question', question);
+
+    const competition = await this.prisma.competition.create({
       data: {
         question,
         endDateTime,
@@ -265,6 +271,8 @@ export class QueueConsumer {
         },
       },
     });
+
+    return competition;
   }
 
   getRoomPayload(userInfo: QueueInput['userData']): RoomEvent {

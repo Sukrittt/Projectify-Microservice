@@ -54,9 +54,7 @@ export const personality = {
     - Generate a unique logic-based question suitable for both users' skill levels.
     - Ensure the question is clear, concise, and has no ambiguity.
     - Provide at least two example inputs and their corresponding outputs.
-    - Do not repeat questions from previousQuestions.
     - Format the question clearly, separating sections with line breaks (\n).
-    - If the question includes code snippets, wrap them with exactly four carets (^^^^).
     - The response must be in JSON format.
 
     Example Output:

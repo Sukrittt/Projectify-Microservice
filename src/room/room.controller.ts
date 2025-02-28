@@ -26,7 +26,7 @@ export class RoomController {
     required: true,
     description: 'User to be added to a room.',
   })
-  updateUser(@Body() joinRoomDto: JoinRoomDto) {
+  joinRoom(@Body() joinRoomDto: JoinRoomDto) {
     return this.roomService.joinRoom(joinRoomDto);
   }
 
