@@ -25,7 +25,7 @@ CREATE TABLE "AdditionalUserInfo" (
     "userId" TEXT NOT NULL,
     "preferredLanguage" TEXT,
     "tierProgress" INTEGER DEFAULT 0,
-    "tierId" TEXT DEFAULT 'cm57vg0ek0000j0jsjg02x2v9',
+    "tierId" TEXT DEFAULT 'cm7pofbrd0004vhulv1k1nsz9',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

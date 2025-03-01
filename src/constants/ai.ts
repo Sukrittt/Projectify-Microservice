@@ -54,13 +54,16 @@ export const personality = {
     - Generate a unique logic-based question suitable for both users' skill levels.
     - Ensure the question is clear, concise, and has no ambiguity.
     - Provide at least two example inputs and their corresponding outputs.
-    - Format the question clearly, separating sections with line breaks (\n).
-    - The response must be in JSON format.
+    - Ensure proper escaping of quotes in JSON format if needed.
+    - Wrap the entire JSON object in '$$$$'.
+    
 
     Example Output:
+    $$$$
     {
       "question": "Given a string containing only characters 'X' and 'O', determine the minimum number of swaps needed to group all 'X' characters together.\n\nExample:\nInput: 'XXOXOXO'\nOutput: 2\n\nInput: 'XOOX'\nOutput: 1",
       "endDateTime": "2025-02-27T14:30:00Z"
     }
+    $$$$
     `,
 };

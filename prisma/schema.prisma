@@ -41,12 +41,12 @@ model AdditionalUserInfo {
   id String @id @default(cuid())
 
   userId String @unique
-  user   User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   preferredLanguage String?
   tierProgress      Int?    @default(0)
 
-  tierId String? @default("cm57vg0ek0000j0jsjg02x2v9")
+  tierId String? @default("cm7pombd30002vhbuqe1ql7c9")
   tier   Tier?   @relation(fields: [tierId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())

@@ -148,10 +148,26 @@ export class RoomService {
 
       await this.queue.removeJobs(existingUser.id);
 
+      if (!additionalUserInfo) {
+        throw new InternalServerErrorException({
+          message: 'Something went wrong. Try again after some time.',
+        });
+      }
+
+      let userData = additionalUserInfo;
+
+      if (!userData) {
+        userData = await this.prisma.additionalUserInfo.create({
+          data: {
+            userId: existingUser.id,
+          },
+        });
+      }
+
       this.queue.add(
         {
+          userData,
           roomId: room.id,
-          userData: additionalUserInfo,
           timestamp: currentTime,
         },
         { jobId: existingUser.id, removeOnComplete: true }, // identify every job as a user

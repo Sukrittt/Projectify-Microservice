@@ -114,6 +114,8 @@ export class QueueConsumer {
         opponent.userData,
       );
 
+      Logger.log('Competition created');
+
       const opponentPayload = this.getRoomPayload(opponent.userData);
       const currentUserPayload = this.getRoomPayload(job.data.userData);
 
@@ -228,12 +230,12 @@ export class QueueConsumer {
   ) {
     const userGeneratePayload =
       await this.generateService.generateCodingMinigame({
-        clerkId: user.userId,
+        clerkId: user.user.clerkId,
       });
 
     const opponentGeneratePayload =
       await this.generateService.generateCodingMinigame({
-        clerkId: opponent.userId,
+        clerkId: opponent.user.clerkId,
       });
 
     const genPayload = {
@@ -247,11 +249,9 @@ export class QueueConsumer {
       personality.COMPETITION_QUESTION_GENERATION,
     );
 
-    const { question, endDateTime } = JSON.parse(
+    const { question, endDateTime } = this.extractAndParseJSON(
       generatedPayload,
     ) as CodingGenerationPayload;
-
-    console.log('Generated Question', question);
 
     const competition = await this.prisma.competition.create({
       data: {
@@ -288,5 +288,19 @@ export class QueueConsumer {
     };
 
     return payload;
+  }
+
+  extractAndParseJSON(response: string) {
+    const match = response?.match(/\$\$\$\$(.*?)\$\$\$\$/s);
+    if (!match) return null;
+
+    try {
+      const formattedResponse = match[1].trim();
+
+      return JSON.parse(formattedResponse);
+    } catch (error) {
+      console.error('Invalid JSON:', error);
+      return null;
+    }
   }
 }
