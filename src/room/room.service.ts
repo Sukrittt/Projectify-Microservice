@@ -116,64 +116,12 @@ export class RoomService {
         'id',
       ]);
 
-      // // Delete all the waiting rooms of the user.
-      // await this.prisma.room.deleteMany({
-      //   where: {
-      //     userId: existingUser.id,
-      //     status: 'WAITING',
-      //   },
-      // });
-
       const room = await this.prisma.room.create({
         data: {
           userId: existingUser.id,
         },
         select: { id: true },
       });
-
-      // const promises = [
-      //   this.prisma.additionalUserInfo.findFirst({
-      //     where: {
-      //       userId: existingUser.id,
-      //     },
-      //     include: {
-      //       user: true,
-      //     },
-      //   }),
-      // ];
-
-      // const [room, additionalUserInfo] = await Promise.all(promises);
-
-      // await this.queue.clean(0, 'completed');
-
-      // const currentTime = Date.now();
-
-      // await this.queue.removeJobs(existingUser.id);
-
-      // if (!additionalUserInfo) {
-      //   throw new InternalServerErrorException({
-      //     message: 'Something went wrong. Try again after some time.',
-      //   });
-      // }
-
-      // let userData = additionalUserInfo;
-
-      // if (!userData) {
-      //   userData = await this.prisma.additionalUserInfo.create({
-      //     data: {
-      //       userId: existingUser.id,
-      //     },
-      //   });
-      // }
-
-      // this.queue.add(
-      //   {
-      //     userData,
-      //     roomId: room.id,
-      //     timestamp: currentTime,
-      //   },
-      //   { jobId: existingUser.id, removeOnComplete: true }, // identify every job as a user
-      // );
 
       return {
         message: 'Room joined successfully',
