@@ -3,6 +3,7 @@ import { ApiBody, ApiTags, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 
 import { RoomService } from 'src/room/room.service';
 import { JoinRoomDto } from 'src/room/dto/join-room.dto';
+import { PingDto } from './dto/ping.dto';
 
 @ApiTags('Room')
 @ApiBearerAuth()
@@ -28,6 +29,11 @@ export class RoomController {
   })
   joinRoom(@Body() joinRoomDto: JoinRoomDto) {
     return this.roomService.joinRoom(joinRoomDto);
+  }
+
+  @Post('/:roomId/ping')
+  ping(@Param('roomId') roomId: string, @Body() pingData: PingDto) {
+    return this.roomService.pingRoom(roomId, pingData);
   }
 
   @Get('/getEstimatedQueueTime/:clerkId')
